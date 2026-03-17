@@ -1,62 +1,25 @@
-import {
-	DarkTheme,
-	DefaultTheme,
-	ThemeProvider,
-} from "@react-navigation/native";
-import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import "../global.css";
-import * as SplashScreen from "expo-splash-screen";
+import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { theme } from '../src/theme'; // O tema que criamos no passo anterior
 import { useEffect } from "react";
-import "react-native-reanimated";
+import * as SplashScreen from "expo-splash-screen";
 
-import { useColorScheme } from "@/components/useColorScheme";
-
-export {
-	// Catch any errors thrown by the Layout component.
-	ErrorBoundary,
-} from "expo-router";
-
-export const unstable_settings = {
-	// Ensure that reloading on `/modal` keeps a back button present.
-	initialRouteName: "(panel)",
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Impede a splash screen de sumir antes de carregar o app
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-	const [loaded, error] = useFonts({
-		SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-	});
+  
+  useEffect(() => {
+    // Esconde a splash screen após o app montar
+    SplashScreen.hideAsync();
+  }, []);
 
-	// Expo Router uses Error Boundaries to catch errors in the navigation tree.
-	useEffect(() => {
-		if (error) throw error;
-	}, [error]);
-
-	useEffect(() => {
-		if (loaded) {
-			SplashScreen.hideAsync();
-		}
-	}, [loaded]);
-
-	if (!loaded) {
-		return null;
-	}
-
-	return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-	const colorScheme = useColorScheme();
-
-	return (
-		<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-			<Stack>
-				<Stack.Screen name='(panel)' options={{ headerShown: false }} />
-				<Stack.Screen name='modal' options={{ presentation: "modal" }} />
-			</Stack>
-		</ThemeProvider>
-	);
+  return (
+    <PaperProvider theme={{ ...MD3LightTheme, colors: { ...MD3LightTheme.colors, primary: theme.colors.primary } }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        {/* Aqui garantimos que ele procure a pasta (panel) */}
+        <Stack.Screen name="(panel)" options={{ headerShown: false }} />
+      </Stack>
+    </PaperProvider>
+  );
 }
