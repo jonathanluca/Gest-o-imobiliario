@@ -1,51 +1,174 @@
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, useWindowDimensions, ScrollView } from 'react-native';
-import { Building2, TrendingUp, FileText, UserPlus, Calendar, DollarSign } from 'lucide-react-native';
-// Importando os gráficos
+import { 
+  Building2, TrendingUp, FileText, 
+  UserPlus, Calendar, DollarSign, Filter 
+} from 'lucide-react-native';
 import { BarChart, PieChart } from "react-native-gifted-charts";
 
 import { theme } from '../../theme';
 import * as S from './dashboard.styles';
 
+// --- 1. TIPAGEM (Sempre fora do componente) ---
+interface Venda {
+  id: number;
+  corretor: string;
+  valor: number;
+  data: string; 
+  tipo: 'Apto' | 'Casa' | 'Terr.' | 'Comer.';
+  status: 'Disponível' | 'Reservado' | 'Vendido';
+}
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  sub: string;
+  icon: React.ReactNode;
+  width: any;
+}
+
+interface TableRowProps {
+  name: string;
+  sales: string | number;
+  value: string;
+}
+
+// --- 2. MOCK DE DADOS ---
+const MOCK_VENDAS: Venda[] = [
+  { id: 1, corretor: "João Corretor", valor: 580000, data: '2026-03-10', tipo: 'Apto', status: 'Vendido' },
+  { id: 7, corretor: "João Corretor", valor: 580000, data: '2026-03-10', tipo: 'Terr.', status: 'Vendido' },
+  { id: 6, corretor: "João Corretor", valor: 580000, data: '2026-03-10', tipo: 'Casa', status: 'Vendido' },
+  { id: 5, corretor: "João Corretor", valor: 580000, data: '2026-03-10', tipo: 'Apto', status: 'Reservado' },
+  { id: 4, corretor: "João Corretor", valor: 580000, data: '2026-03-10', tipo: 'Apto', status: 'Vendido' },
+  { id: 2, corretor: "Maria Corretora", valor: 192000, data: '2026-03-15', tipo: 'Terr.', status: 'Vendido' },
+  { id: 3, corretor: "João Corretor", valor: 29000, data: '2026-02-20', tipo: 'Casa', status: 'Reservado' },
+    { id: 8, corretor: "João Corretor", valor: 29000, data: '2026-02-20', tipo: 'Casa', status: 'Reservado' },
+    { id: 9, corretor: "João Corretor", valor: 29000, data: '2026-02-20', tipo: 'Casa', status: 'Reservado' },
+];
+
 export default function Dashboard() {
   const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  
+    const [hasMounted, setHasMounted] = useState(false);
+
+  // --- 3. ESTADOS DOS FILTROS ---
+  const [corretorFiltro, setCorretorFiltro] = useState<string>('Todos');
+  const [anoFiltro, setAnoFiltro] = useState<string>('2026');
+
+  // --- 4. LÓGICA DE FILTRAGEM (USEMEMO) ---
+  const dadosFiltrados = useMemo(() => {
+    return MOCK_VENDAS.filter(item => {
+      const matchCorretor = corretorFiltro === 'Todos' || item.corretor === corretorFiltro;
+      const matchAno = item.data.includes(anoFiltro);
+      return matchCorretor && matchAno;
+    });
+  }, [corretorFiltro, anoFiltro]);
+
+  // Cálculos baseados nos filtros
+  const totalValorVendas = dadosFiltrados.reduce((acc, curr) => acc + curr.valor, 0);
+  const totalVendasQtd = dadosFiltrados.length;
+
+  // Dados Dinâmicos para Gráfico de Barras
+  const barData = useMemo(() => [
+    { value: dadosFiltrados.filter(v => v.tipo === 'Apto').length, label: 'Apto', frontColor: theme.colors.primary },
+    { value: dadosFiltrados.filter(v => v.tipo === 'Casa').length, label: 'Casa', frontColor: theme.colors.primary },
+    { value: dadosFiltrados.filter(v => v.tipo === 'Terr.').length, label: 'Terr.', frontColor: theme.colors.primary },
+    { value: dadosFiltrados.filter(v => v.tipo === 'Comer.').length, label: 'Comer.', frontColor: theme.colors.primary },
+  ], [dadosFiltrados]);
+
+  // Dados Dinâmicos para Gráfico de Pizza
+  const pieData = useMemo(() => [
+    { value: dadosFiltrados.filter(v => v.status === 'Disponível').length, color: theme.colors.success, label: 'Disponível' },
+    { value: dadosFiltrados.filter(v => v.status === 'Reservado').length, color: theme.colors.warning, label: 'Reservado' },
+    { value: dadosFiltrados.filter(v => v.status === 'Vendido').length, color: theme.colors.primary, label: 'Vendido' },
+  ], [dadosFiltrados]);
+
+  
+  
+  // --- ESTADOS DOS FILTROS ---
+  const [corretor, setCorretor] = useState('João Corretor');
+  const [ano, setAno] = useState('2026');
+  const [mes, setMes] = useState('Todos os meses');
+
   const cardWidth = width > 1000 ? '31.5%' : width > 700 ? '48%' : '100%';
 
-  // Dados para o Gráfico de Barras (Imóveis por Tipo)
-  const barData = [
-    { value: 3, label: 'Apto', frontColor: theme.colors.primary },
-    { value: 1, label: 'Casa', frontColor: theme.colors.primary },
-    { value: 1, label: 'Terr.', frontColor: theme.colors.primary },
-    { value: 1, label: 'Comer.', frontColor: theme.colors.primary },
-  ];
-
-
-
-
-  // Dados para o Gráfico de Pizza (Status)
-  const pieData = [
-    { value: 4, color: theme.colors.success, text: '4', label: 'Disponível' },
-    { value: 1, color: theme.colors.warning, text: '1', label: 'Reservado' },
-    { value: 1, color: theme.colors.primary, text: '1', label: 'Vendido' },
-  ];
+useEffect(() => {
+    setHasMounted(true);
+  }, []);
+  
 
   return (
     <S.Container>
-      <S.Title>Dashboard</S.Title>
-      <S.Subtitle>Visão geral do sistema</S.Subtitle>
+      <S.Content>
+        <S.Title>Dashboard</S.Title>
+        <S.Subtitle>Visão geral do sistema</S.Subtitle>
 
-      {/* CARDS DE STATUS */}
-      <S.StatsGrid>
-        <StatCard width={cardWidth} title="Imóveis Disponíveis" value="4" sub="Ativos no sistema" icon={<Building2 color={theme.colors.primary} size={20}/>} />
-        <StatCard width={cardWidth} title="Vendas no Mês" value="2" sub="R$ 3.780.000,00" icon={<TrendingUp color={theme.colors.success} size={20}/>} />
-        <StatCard width={cardWidth} title="Propostas Pendentes" value="2" sub="Aguardando resposta" icon={<FileText color={theme.colors.warning} size={20}/>} />
-      </S.StatsGrid>
+        {/* --- SEÇÃO DE FILTROS --- */}
+        <S.FilterCard>
+          <S.FilterHeader>
+            <Filter color={theme.colors.primary} size={18} />
+            <S.FilterTitle>Filtros de Análise</S.FilterTitle>
+          </S.FilterHeader>
 
+          <S.FilterRow>
+            <View style={{ flex: 1, minWidth: 150 }}>
+              <S.CardTitle style={{ marginBottom: 8 }}>Corretor</S.CardTitle>
+              {/* Aqui entraria seu componente de Select. Exemplo visual: */}
+              <S.MockInput><S.TableText>{corretor}</S.TableText></S.MockInput>
+            </View>
+
+            <View style={{ flex: 1, minWidth: 150 }}>
+              <S.CardTitle style={{ marginBottom: 8 }}>Ano</S.CardTitle>
+              <S.MockInput><S.TableText>{ano}</S.TableText></S.MockInput>
+            </View>
+
+            <View style={{ flex: 1, minWidth: 150 }}>
+              <S.CardTitle style={{ marginBottom: 8 }}>Mês</S.CardTitle>
+              <S.MockInput><S.TableText>{mes}</S.TableText></S.MockInput>
+            </View>
+          </S.FilterRow>
+
+          <S.ActiveFilterBar>
+            <S.ActiveFilterText>
+              Filtros ativos: <S.ActiveFilterBoldText>Corretor: {corretor} •</S.ActiveFilterBoldText>
+            </S.ActiveFilterText>
+          </S.ActiveFilterBar>
+        </S.FilterCard>
+
+
+      {/* --- GRID DE CARDS (6 CARDS) --- */}
+        <S.StatsGrid>
+          <StatCard 
+            width={cardWidth} title="Imóveis Disponíveis" value="2" sub="Ativos no sistema" 
+            icon={<Building2 color="#3b82f6" size={20}/>} 
+          />
+          <StatCard 
+            width={cardWidth} title="Vendas no Mês" value="1" sub="R$ 580.000,00" 
+            icon={<TrendingUp color="#10b981" size={20}/>} 
+          />
+          <StatCard 
+            width={cardWidth} title="Propostas Pendentes" value="2" sub="Aguardando resposta" 
+            icon={<FileText color="#f59e0b" size={20}/>} 
+          />
+          <StatCard 
+            width={cardWidth} title="Leads Ativos" value="3" sub="Em processo" 
+            icon={<UserPlus color="#a855f7" size={20}/>} 
+          />
+          <StatCard 
+            width={cardWidth} title="Visitas Agendadas" value="2" sub="Próximas visitas" 
+            icon={<Calendar color="#ef4444" size={20}/>} 
+          />
+          <StatCard 
+            width={cardWidth} title="Total em Vendas" value="R$ 580.000,00" sub="Mês atual" 
+            icon={<DollarSign color="#10b981" size={20}/>} 
+          />
+        </S.StatsGrid>
+
+      
+      
+      
       {/* SEÇÃO DE GRÁFICOS */}
       <S.ChartsRow style={{ flexDirection: width > 900 ? 'row' : 'column' }}>
-        
-        {/* GRÁFICO DE BARRAS */}
         <S.ChartCard style={{ width: width > 900 ? '49%' : '100%' }}>
           <S.CardTitle>Imóveis por Tipo</S.CardTitle>
           <View style={{ alignItems: 'center', marginTop: 20 }}>
@@ -53,33 +176,25 @@ export default function Dashboard() {
               data={barData}
               barWidth={40}
               noOfSections={3}
-              dashGap={0}
-               barBorderRadius={4}
+              barBorderRadius={4}
               yAxisThickness={0}
-              xAxisThickness={1}
               xAxisColor={theme.colors.border}
               hideRules
-              yAxisLabelContainerStyle={{ width: 30 }}
-              isAnimated
             />
           </View>
         </S.ChartCard>
 
-        {/* GRÁFICO DE PIZZA / DONUT */}
         <S.ChartCard style={{ width: width > 900 ? '49%' : '100%' }}>
           <S.CardTitle>Status dos Imóveis</S.CardTitle>
           <View style={{ alignItems: 'center', marginTop: 20, flexDirection: 'row', justifyContent: 'space-around' }}>
             <PieChart
               data={pieData}
               donut
-              radius={80}
-              innerRadius={50}
+              radius={70}
+              innerRadius={45}
               showText
               textColor="white"
-              textSize={12}
-              focusOnPress
             />
-            {/* Legenda Lateral */}
             <View>
               {pieData.map((item, index) => (
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -90,32 +205,41 @@ export default function Dashboard() {
             </View>
           </View>
         </S.ChartCard>
-
       </S.ChartsRow>
 
-      {/* TABELA DE COMISSÕES */}
+      {/* TABELA DE COMISSÕES DINÂMICA */}
       <S.TableCard>
         <S.CardTitle style={{ marginBottom: 20 }}>Comissões por Corretor</S.CardTitle>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={{ width: width < 600 ? 500 : '100%' }}>
-            <S.TableHeader>
-              <S.HeaderText style={{ flex: 2 }}>Corretor</S.HeaderText>
-              <S.HeaderText style={{ flex: 1, textAlign: 'center' }}>Vendas</S.HeaderText>
-              <S.HeaderText style={{ flex: 1, textAlign: 'right' }}>Total Comissão</S.HeaderText>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={{ flex: 1, minWidth: 500 }}>
+            <S.TableHeader style={{ flexDirection: 'row', paddingVertical: 10, borderBottomWidth: 1, borderColor: '#eee' }}>
+              <S.HeaderText style={{ flex: 3 }}>CORRETOR</S.HeaderText>
+              <S.HeaderText style={{ flex: 1, textAlign: 'center' }}>VENDAS</S.HeaderText>
+              <S.HeaderText style={{ flex: 2, textAlign: 'right' }}>TOTAL COMISSÃO</S.HeaderText>
             </S.TableHeader>
             
-            <TableRow name="João Corretor" sales="1" value="R$ 29.000,00" />
-            <TableRow name="Maria Corretora" sales="1" value="R$ 192.000,00" />
+            {/* Mapeando os dados filtrados para a tabela */}
+            {/* Aqui você pode agrupar os dados se quiser somar as vendas do mesmo corretor */}
+            {dadosFiltrados.map((venda) => (
+              <TableRow 
+                key={venda.id}
+                name={venda.corretor} 
+                sales={1} 
+                value={`R$ ${(venda.valor * 0.05).toLocaleString('pt-BR')}`} // Exemplo 5%
+              />
+            ))}
           </View>
         </ScrollView>
       </S.TableCard>
-
+      </S.Content>
     </S.Container>
+      
+   
   );
 }
 
-// Componentes auxiliares
-function StatCard({ title, value, sub, icon, width }: any) {
+// --- 5. COMPONENTES AUXILIARES (Fora do Dashboard) ---
+function StatCard({ title, value, sub, icon, width }: StatCardProps) {
   return (
     <S.Card style={{ width: width }}>
       <S.CardHeader>
@@ -128,12 +252,12 @@ function StatCard({ title, value, sub, icon, width }: any) {
   );
 }
 
-function TableRow({ name, sales, value }: any) {
+function TableRow({ name, sales, value }: TableRowProps) {
   return (
     <S.TableRow>
-      <S.TableText style={{ flex: 2, fontWeight: '500' }}>{name}</S.TableText>
+      <S.TableText style={{ flex: 3, fontWeight: '500' }}>{name}</S.TableText>
       <S.TableText style={{ flex: 1, textAlign: 'center' }}>{sales}</S.TableText>
-      <S.TableText style={{ flex: 1, textAlign: 'right', color: theme.colors.success, fontWeight: 'bold' }}>{value}</S.TableText>
+      <S.TableText style={{ flex: 2, textAlign: 'right', color: theme.colors.success, fontWeight: 'bold' }}>{value}</S.TableText>
     </S.TableRow>
   );
 }
