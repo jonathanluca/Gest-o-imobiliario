@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
-import { theme } from '../src/theme'; // O tema que criamos no passo anterior
+import { theme } from '../theme'; // O tema que criamos no passo anterior
 import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 
