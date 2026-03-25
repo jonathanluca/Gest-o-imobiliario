@@ -36,7 +36,7 @@ export default function PanelLayout() {
             icon={<Users size={20} />} 
             label="Clientes" 
             active={isActive('/clientes')} 
-            onPress={() => router.push('/clientes')} 
+            onPress={() => router.push('/clientes/clientes')} 
           />
           <SidebarItem 
             icon={<DollarSign size={20} />} 
