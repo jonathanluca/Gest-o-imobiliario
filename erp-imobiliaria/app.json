@@ -1,4 +1,6 @@
 {
+	
+	
 	"expo": {
 		"name": "erp-imobiliaria",
 		"slug": "erp-imobiliaria",
@@ -7,13 +9,15 @@
 		"icon": "./assets/images/icon.png",
 		"scheme": "erpimobiliaria",
 		"userInterfaceStyle": "automatic",
+    	"jsEngine": "hermes",
 		"splash": {
 			"image": "./assets/images/splash-icon.png",
 			"resizeMode": "contain",
 			"backgroundColor": "#ffffff"
 		},
 		"ios": {
-			"supportsTablet": true
+			"supportsTablet": true,
+			"jsEngine": "jsc"
 		},
 		"android": {
 			"adaptiveIcon": {
