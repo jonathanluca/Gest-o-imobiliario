@@ -42,7 +42,7 @@ export default function PanelLayout() {
             icon={<DollarSign size={20} />} 
             label="Vendas" 
             active={isActive('/vendas')} 
-            onPress={() => router.push('/vendas')} 
+            onPress={() => router.push('/vendas/vendas')} 
           />
           <SidebarItem 
             icon={<MessageSquare size={20} />} 
