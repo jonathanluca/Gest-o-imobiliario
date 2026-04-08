@@ -1,55 +1,41 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { PrismaClient, Prisma } from "@prisma/client";
-
-import fs from "fs";
-import path from "path";
-import "dotenv/config";
+import { PrismaClient } from "@prisma/client";
 
 const app = express();
-// Teste físico do arquivo
-const envPath = path.resolve(process.cwd(), ".env");
+const prisma = new PrismaClient();
 
-console.log("Procurando .env em:", envPath);
-console.log("Arquivo existe?", fs.existsSync(envPath) ? "SIM" : "NÃO");
+// Configurações essenciais
+app.use(cors()); // Libera o acesso para o seu React/React Native
+app.use(express.json()); // Permite que a API receba dados no formato JSON (POST/PUT)
 
-// Teste da variável
-console.log(
-	"DATABASE_URL carregada?",
-	process.env.DATABASE_URL ? "SIM" : "NÃO",
-);
+// ---------------------------------------------------
+// ROTAS DA API
+// ---------------------------------------------------
 
-console.log("Variável carregada:", process.env.DATABASE_URL ? "SIM" : "NÃO");
+// Rota 1: Teste rápido para ver se a API está no ar
+app.get("/", (req, res) => {
+	res.json({ message: "🏢 API do ERP Imobiliário operando 100%!" });
+});
 
-app.use(cors());
-app.use(express.json());
-
-// ROTA PARA O DASHBOARD
-app.get("/api/dashboard/stats", async (req, res) => {
+// Rota 2: Listar Imóveis (Trazendo o nome do corretor junto)
+app.get("/imoveis", async (req, res) => {
 	try {
-		const imoveisDisponiveis = await prisma.properties.count({
-			where: { status: "Disponível" },
-		});
-
-		const totalVendas = await prisma.sales.aggregate({
-			_sum: { total_value: true },
-		});
-
-		const leadsAtivos = await prisma.leads.count({
-			where: { NOT: { status: "Convertido" } },
-		});
-
-		res.json({
-			imoveisDisponiveis,
-			totalVendas: totalVendas._sum.total_value || 0,
-			leadsAtivos,
-		});
+		const imoveis = await prisma.properties.findMany();
+		res.json(imoveis);
 	} catch (error) {
-		res.status(500).json({ error: "Erro ao buscar dados do dashboard" });
+		console.error(error);
+		res.status(500).json({ error: "Erro ao buscar os imóveis" });
 	}
 });
 
-const PORT = process.env.PORT || 3000;
+// ---------------------------------------------------
+// INICIANDO O SERVIDOR
+// ---------------------------------------------------
+const PORT = process.env.PORT || 3333;
+
 app.listen(PORT, () => {
-	console.log(`🚀 Servidor ERP rodando na porta ${PORT}`);
+	console.log(`🚀 Servidor rodando com sucesso em http://localhost:${PORT}`);
+	console.log(`👉 Teste no navegador: http://localhost:${PORT}/imoveis`);
 });
