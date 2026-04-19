@@ -28,7 +28,7 @@ type Imovel = {
   description: string;
   broker_id: string | null;
   images: string[];
-  profiles?: { full_name: string } | null;
+  broker?: { full_name: string } | null;
 };
 
 const emptyForm = {
@@ -269,7 +269,7 @@ export default function Imoveis() {
                 <S.PropertyTitle numberOfLines={1}>{imovel.title}</S.PropertyTitle>
                 <S.PropertyPrice>{formatPrice(imovel.price)}</S.PropertyPrice>
                 <S.BrokerText>
-                  {imovel.profiles?.full_name ?? 'Sem corretor'} •{' '}
+                  {imovel.broker?.full_name ?? 'Sem corretor'} •{' '}
                   {imovel.area}m² • {imovel.bedrooms} qts • {imovel.parking_spots} vgs
                 </S.BrokerText>
                 <S.ActionRow>
@@ -438,7 +438,7 @@ export default function Imoveis() {
                   {selectedProperty.bathrooms} banheiros • {selectedProperty.parking_spots} vagas
                 </Text>
 
-                {selectedProperty.profiles?.full_name && (
+                {selectedProperty.broker?.full_name && (
                   <>
                     <S.Label>Corretor</S.Label>
                     <Text style={{ marginBottom: 16 }}>{selectedProperty.profiles.full_name}</Text>
