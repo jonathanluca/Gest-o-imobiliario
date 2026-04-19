@@ -17,7 +17,7 @@ export default function RootLayout() {
   return (
     <PaperProvider theme={{ ...MD3LightTheme, colors: { ...MD3LightTheme.colors, primary: theme.colors.primary } }}>
       <Stack screenOptions={{ headerShown: false }}>
-        {/* Aqui garantimos que ele procure a pasta (panel) */}
+        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(panel)" options={{ headerShown: false }} />
       </Stack>
     </PaperProvider>
