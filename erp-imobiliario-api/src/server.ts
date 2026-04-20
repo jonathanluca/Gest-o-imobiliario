@@ -97,6 +97,92 @@ app.get("/api/auth/me", authMiddleware, async (req: any, res) => {
 	}
 });
 
+// ─── FUNCIONÁRIOS ────────────────────────────────────────────────────────────
+
+app.get("/api/funcionarios", authMiddleware, adminMiddleware, async (req, res) => {
+	try {
+		const { search } = req.query;
+		const where: any = search
+			? {
+				OR: [
+					{ full_name: { contains: String(search), mode: "insensitive" } },
+					{ email: { contains: String(search), mode: "insensitive" } },
+					{ cpf: { contains: String(search) } },
+				],
+			  }
+			: {};
+		const funcionarios = await prisma.profile.findMany({
+			where,
+			select: { id: true, full_name: true, email: true, role: true, birth_date: true, cpf: true, created_at: true },
+			orderBy: { created_at: "desc" },
+		});
+		res.json(funcionarios);
+	} catch {
+		res.status(500).json({ error: "Erro ao buscar funcionários" });
+	}
+});
+
+app.post("/api/funcionarios", authMiddleware, adminMiddleware, async (req, res) => {
+	try {
+		const { full_name, email, password, role, birth_date, cpf } = req.body;
+		if (!full_name || !email || !password || !birth_date || !cpf) {
+			return res.status(400).json({ error: "Nome, e-mail, senha, data de nascimento e CPF são obrigatórios" });
+		}
+		const existing = await prisma.profile.findUnique({ where: { email } });
+		if (existing) return res.status(409).json({ error: "E-mail já cadastrado" });
+		const password_hash = await bcrypt.hash(password, 10);
+		const funcionario = await prisma.profile.create({
+			data: {
+				id: randomUUID(),
+				full_name,
+				email,
+				password_hash,
+				role: role || "corretor",
+				birth_date: new Date(birth_date),
+				cpf,
+			},
+			select: { id: true, full_name: true, email: true, role: true, birth_date: true, cpf: true, created_at: true },
+		});
+		res.status(201).json(funcionario);
+	} catch (error: any) {
+		if (error?.code === "P2002") return res.status(409).json({ error: "CPF ou e-mail já cadastrado" });
+		res.status(500).json({ error: "Erro ao criar funcionário" });
+	}
+});
+
+app.put("/api/funcionarios/:id", authMiddleware, adminMiddleware, async (req, res) => {
+	try {
+		const { full_name, email, role, birth_date, cpf } = req.body;
+		const funcionario = await prisma.profile.update({
+			where: { id: req.params.id },
+			data: {
+				full_name,
+				email,
+				role,
+				birth_date: birth_date ? new Date(birth_date) : undefined,
+				cpf,
+			},
+			select: { id: true, full_name: true, email: true, role: true, birth_date: true, cpf: true, created_at: true },
+		});
+		res.json(funcionario);
+	} catch (error: any) {
+		if (error?.code === "P2002") return res.status(409).json({ error: "CPF ou e-mail já cadastrado" });
+		res.status(500).json({ error: "Erro ao atualizar funcionário" });
+	}
+});
+
+app.delete("/api/funcionarios/:id", authMiddleware, adminMiddleware, async (req: any, res) => {
+	try {
+		if (req.params.id === req.user.id) {
+			return res.status(400).json({ error: "Não é possível excluir seu próprio usuário" });
+		}
+		await prisma.profile.delete({ where: { id: req.params.id } });
+		res.status(204).send();
+	} catch {
+		res.status(500).json({ error: "Erro ao excluir funcionário" });
+	}
+});
+
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
 app.get("/api/dashboard/stats", authMiddleware, async (req, res) => {
