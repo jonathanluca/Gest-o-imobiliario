@@ -113,7 +113,7 @@ app.get("/api/funcionarios", authMiddleware, adminMiddleware, async (req, res) =
 			: {};
 		const funcionarios = await prisma.profile.findMany({
 			where,
-			select: { id: true, full_name: true, email: true, role: true, birth_date: true, cpf: true, created_at: true },
+			select: { id: true, full_name: true, email: true, role: true, cpf: true, created_at: true },
 			orderBy: { created_at: "desc" },
 		});
 		res.json(funcionarios);
@@ -124,9 +124,9 @@ app.get("/api/funcionarios", authMiddleware, adminMiddleware, async (req, res) =
 
 app.post("/api/funcionarios", authMiddleware, adminMiddleware, async (req, res) => {
 	try {
-		const { full_name, email, password, role, birth_date, cpf } = req.body;
-		if (!full_name || !email || !password || !birth_date || !cpf) {
-			return res.status(400).json({ error: "Nome, e-mail, senha, data de nascimento e CPF são obrigatórios" });
+		const { full_name, email, password, role, cpf } = req.body;
+		if (!full_name || !email || !password || !cpf) {
+			return res.status(400).json({ error: "Nome, e-mail, senha e CPF são obrigatórios" });
 		}
 		const existing = await prisma.profile.findUnique({ where: { email } });
 		if (existing) return res.status(409).json({ error: "E-mail já cadastrado" });
@@ -138,10 +138,9 @@ app.post("/api/funcionarios", authMiddleware, adminMiddleware, async (req, res) 
 				email,
 				password_hash,
 				role: role || "corretor",
-				birth_date: new Date(birth_date),
 				cpf,
 			},
-			select: { id: true, full_name: true, email: true, role: true, birth_date: true, cpf: true, created_at: true },
+			select: { id: true, full_name: true, email: true, role: true, cpf: true, created_at: true },
 		});
 		res.status(201).json(funcionario);
 	} catch (error: any) {
@@ -152,17 +151,11 @@ app.post("/api/funcionarios", authMiddleware, adminMiddleware, async (req, res) 
 
 app.put("/api/funcionarios/:id", authMiddleware, adminMiddleware, async (req, res) => {
 	try {
-		const { full_name, email, role, birth_date, cpf } = req.body;
+		const { full_name, email, role, cpf } = req.body;
 		const funcionario = await prisma.profile.update({
 			where: { id: req.params.id },
-			data: {
-				full_name,
-				email,
-				role,
-				birth_date: birth_date ? new Date(birth_date) : undefined,
-				cpf,
-			},
-			select: { id: true, full_name: true, email: true, role: true, birth_date: true, cpf: true, created_at: true },
+			data: { full_name, email, role, cpf },
+			select: { id: true, full_name: true, email: true, role: true, cpf: true, created_at: true },
 		});
 		res.json(funcionario);
 	} catch (error: any) {

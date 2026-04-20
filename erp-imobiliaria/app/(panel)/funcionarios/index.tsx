@@ -17,7 +17,6 @@ type Funcionario = {
   full_name: string | null;
   email: string | null;
   role: string | null;
-  birth_date: string | null;
   cpf: string | null;
   created_at: string;
 };
@@ -27,14 +26,8 @@ const emptyForm = {
   email: '',
   password: '',
   role: 'corretor',
-  birth_date: '',
   cpf: '',
 };
-
-function formatDate(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('pt-BR');
-}
 
 function formatCpf(cpf: string | null) {
   if (!cpf) return '—';
@@ -102,7 +95,6 @@ export default function Funcionarios() {
       email: f.email ?? '',
       password: '',
       role: f.role ?? 'corretor',
-      birth_date: f.birth_date ? f.birth_date.slice(0, 10) : '',
       cpf: f.cpf ?? '',
     });
     setErrors({});
@@ -115,7 +107,6 @@ export default function Funcionarios() {
     if (!form.full_name.trim()) e.full_name = 'Obrigatório';
     if (!form.email.trim()) e.email = 'Obrigatório';
     if (!editingId && !form.password.trim()) e.password = 'Obrigatório';
-    if (!form.birth_date.trim()) e.birth_date = 'Obrigatório';
     if (!form.cpf.trim()) e.cpf = 'Obrigatório';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -129,7 +120,6 @@ export default function Funcionarios() {
         full_name: form.full_name,
         email: form.email,
         role: form.role,
-        birth_date: form.birth_date,
         cpf: form.cpf.replace(/\D/g, ''),
       };
       if (!editingId) body.password = form.password;
@@ -239,7 +229,6 @@ export default function Funcionarios() {
               <S.TableHeaderCell flex={2}>Nome</S.TableHeaderCell>
               <S.TableHeaderCell flex={2}>E-mail</S.TableHeaderCell>
               <S.TableHeaderCell flex={1}>CPF</S.TableHeaderCell>
-              <S.TableHeaderCell flex={1}>Nascimento</S.TableHeaderCell>
               <S.TableHeaderCell flex={1}>Cargo</S.TableHeaderCell>
               <S.TableHeaderCell flex={1}>{' '}</S.TableHeaderCell>
             </S.TableHeader>
@@ -251,7 +240,6 @@ export default function Funcionarios() {
                   <S.Cell flex={2}>{f.full_name ?? '—'}</S.Cell>
                   <S.Cell flex={2} muted>{f.email ?? '—'}</S.Cell>
                   <S.Cell flex={1} muted>{formatCpf(f.cpf)}</S.Cell>
-                  <S.Cell flex={1} muted>{formatDate(f.birth_date)}</S.Cell>
                   <S.Cell flex={1}>
                     <S.RoleBadge role={f.role ?? ''}>
                       <S.RoleBadgeText role={f.role ?? ''}>{f.role ?? '—'}</S.RoleBadgeText>
@@ -272,7 +260,7 @@ export default function Funcionarios() {
                     {f.full_name}
                   </Text>
                   <Text style={{ fontSize: 13, color: theme.colors.textLight }}>{f.email}</Text>
-                  <Text style={{ fontSize: 13, color: theme.colors.textLight }}>{formatCpf(f.cpf)} · {formatDate(f.birth_date)}</Text>
+                  <Text style={{ fontSize: 13, color: theme.colors.textLight }}>{formatCpf(f.cpf)}</Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
                     <S.RoleBadge role={f.role ?? ''}>
                       <S.RoleBadgeText role={f.role ?? ''}>{f.role ?? '—'}</S.RoleBadgeText>
@@ -349,32 +337,19 @@ export default function Funcionarios() {
                 </S.FieldGroup>
               )}
 
-              {/* CPF e Nascimento */}
-              <S.Row2>
-                <S.FlexField>
-                  <S.Label>CPF *</S.Label>
-                  <S.Input
-                    placeholder="000.000.000-00"
-                    placeholderTextColor={theme.colors.textLight}
-                    value={form.cpf}
-                    onChangeText={(v) => setForm({ ...form, cpf: v })}
-                    keyboardType="numeric"
-                    error={!!errors.cpf}
-                  />
-                  {errors.cpf && <S.ErrorText>{errors.cpf}</S.ErrorText>}
-                </S.FlexField>
-                <S.FlexField>
-                  <S.Label>Data de nascimento *</S.Label>
-                  <S.Input
-                    placeholder="AAAA-MM-DD"
-                    placeholderTextColor={theme.colors.textLight}
-                    value={form.birth_date}
-                    onChangeText={(v) => setForm({ ...form, birth_date: v })}
-                    error={!!errors.birth_date}
-                  />
-                  {errors.birth_date && <S.ErrorText>{errors.birth_date}</S.ErrorText>}
-                </S.FlexField>
-              </S.Row2>
+              {/* CPF */}
+              <S.FieldGroup>
+                <S.Label>CPF *</S.Label>
+                <S.Input
+                  placeholder="000.000.000-00"
+                  placeholderTextColor={theme.colors.textLight}
+                  value={form.cpf}
+                  onChangeText={(v) => setForm({ ...form, cpf: v })}
+                  keyboardType="numeric"
+                  error={!!errors.cpf}
+                />
+                {errors.cpf && <S.ErrorText>{errors.cpf}</S.ErrorText>}
+              </S.FieldGroup>
 
               {/* Cargo */}
               <S.FieldGroup>
