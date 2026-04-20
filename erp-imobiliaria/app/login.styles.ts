@@ -2,85 +2,100 @@ import styled from 'styled-components/native';
 import { Platform } from 'react-native';
 import { theme } from '../theme';
 
+const isWeb = Platform.OS === 'web';
+
 export const Screen = styled.View`
   flex: 1;
-  flex-direction: ${Platform.OS === 'web' ? 'row' : 'column'};
+  flex-direction: ${isWeb ? 'row' : 'column'};
   background-color: ${theme.colors.background};
+  ${isWeb ? 'min-height: 100vh;' : ''}
 `;
 
-// ── Painel esquerdo (só desktop) ──────────────────────────────────────────────
+// ── Painel esquerdo ───────────────────────────────────────────────────────────
 export const Brand = styled.View`
-  display: ${Platform.OS === 'web' ? 'flex' : 'none'};
-  width: 45%;
+  display: ${isWeb ? 'flex' : 'none'};
+  width: 42%;
   background-color: #0f172a;
-  padding: 60px 48px;
-  justify-content: space-between;
+  padding: 56px 52px;
+  justify-content: center;
+  gap: 48px;
 `;
 
-export const BrandTop = styled.View``;
+export const BrandTop = styled.View`
+  gap: 6px;
+`;
 
 export const BrandLogo = styled.Text`
-  font-size: 28px;
+  font-size: 22px;
   font-weight: bold;
   color: white;
-  margin-bottom: 8px;
 `;
 
 export const BrandTagline = styled.Text`
-  font-size: 14px;
-  color: #94a3b8;
+  font-size: 13px;
+  color: #64748b;
 `;
 
-export const BrandCenter = styled.View``;
+export const BrandCenter = styled.View`
+  gap: 20px;
+`;
 
 export const BrandHeadline = styled.Text`
-  font-size: 32px;
+  font-size: 34px;
   font-weight: bold;
   color: white;
-  line-height: 42px;
-  margin-bottom: 16px;
+  line-height: 44px;
 `;
 
 export const BrandSub = styled.Text`
   font-size: 15px;
   color: #94a3b8;
-  line-height: 24px;
+  line-height: 26px;
 `;
 
-export const BrandStats = styled.View`
+export const FeatureList = styled.View`
+  gap: 14px;
+`;
+
+export const FeatureItem = styled.View`
   flex-direction: row;
-  gap: 32px;
+  align-items: center;
+  gap: 12px;
 `;
 
-export const StatBlock = styled.View``;
-
-export const StatNumber = styled.Text`
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
+export const FeatureDot = styled.View`
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background-color: ${theme.colors.primary};
 `;
 
-export const StatLabel = styled.Text`
+export const FeatureText = styled.Text`
+  font-size: 14px;
+  color: #cbd5e1;
+`;
+
+export const BrandFooter = styled.Text`
   font-size: 12px;
-  color: #64748b;
-  margin-top: 2px;
+  color: #334155;
 `;
 
-// ── Painel direito (formulário) ────────────────────────────────────────────────
+// ── Painel direito (formulário) ───────────────────────────────────────────────
 export const FormPanel = styled.ScrollView`
   flex: 1;
+  background-color: ${theme.colors.background};
 `;
 
 export const FormInner = styled.View`
   flex: 1;
   justify-content: center;
   align-items: center;
-  padding: ${Platform.OS === 'web' ? '60px 48px' : '48px 24px'};
-  min-height: 100%;
+  padding: ${isWeb ? '48px 52px' : '48px 24px'};
+  min-height: ${isWeb ? '100vh' : '100%'};
 `;
 
 export const MobileLogo = styled.Text`
-  display: ${Platform.OS === 'web' ? 'none' : 'flex'};
+  display: ${isWeb ? 'none' : 'flex'};
   font-size: 22px;
   font-weight: bold;
   color: ${theme.colors.text};
@@ -89,40 +104,42 @@ export const MobileLogo = styled.Text`
 
 export const FormCard = styled.View`
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
 `;
 
 export const FormTitle = styled.Text`
-  font-size: 28px;
+  font-size: 26px;
   font-weight: bold;
   color: ${theme.colors.text};
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 `;
 
 export const FormSubtitle = styled.Text`
-  font-size: 15px;
+  font-size: 14px;
   color: ${theme.colors.textLight};
-  margin-bottom: 36px;
+  margin-bottom: 32px;
+  line-height: 22px;
 `;
 
 export const Label = styled.Text`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: ${theme.colors.text};
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 `;
 
 export const InputWrapper = styled.View<{ focused?: boolean }>`
   flex-direction: row;
   align-items: center;
-  height: 50px;
+  height: 48px;
   border-width: 1.5px;
   border-color: ${(p: any) => p.focused ? theme.colors.primary : theme.colors.border};
   border-radius: 10px;
   background-color: white;
   padding: 0 14px;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  ${isWeb ? 'transition: border-color 0.15s;' : ''}
 `;
 
 export const StyledInput = styled.TextInput`
@@ -141,18 +158,22 @@ export const ErrorBox = styled.View`
   border-width: 1px;
   border-color: #fecaca;
   border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 20px;
+  padding: 11px 14px;
+  margin-bottom: 16px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 `;
 
 export const ErrorText = styled.Text`
   color: #dc2626;
-  font-size: 14px;
+  font-size: 13px;
+  flex: 1;
 `;
 
 export const LoginButton = styled.TouchableOpacity<{ loading?: boolean }>`
-  height: 52px;
-  background-color: ${(p: any) => p.loading ? '#93c5fd' : '#0f172a'};
+  height: 50px;
+  background-color: ${(p: any) => p.loading ? '#475569' : '#0f172a'};
   border-radius: 10px;
   align-items: center;
   justify-content: center;
@@ -161,42 +182,14 @@ export const LoginButton = styled.TouchableOpacity<{ loading?: boolean }>`
 
 export const LoginButtonText = styled.Text`
   color: white;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
-`;
-
-export const Divider = styled.View`
-  flex-direction: row;
-  align-items: center;
-  margin: 24px 0;
-  gap: 12px;
-`;
-
-export const DividerLine = styled.View`
-  flex: 1;
-  height: 1px;
-  background-color: ${theme.colors.border};
-`;
-
-export const DividerText = styled.Text`
-  font-size: 13px;
-  color: ${theme.colors.textLight};
-`;
-
-export const RegisterLink = styled.TouchableOpacity`
-  align-items: center;
-  padding: 8px;
-`;
-
-export const RegisterLinkText = styled.Text`
-  font-size: 14px;
-  color: ${theme.colors.primary};
-  font-weight: 600;
+  letter-spacing: 0.3px;
 `;
 
 export const Footer = styled.Text`
-  font-size: 12px;
-  color: ${theme.colors.textLight};
+  font-size: 11px;
+  color: #cbd5e1;
   text-align: center;
-  margin-top: 32px;
+  margin-top: 28px;
 `;
