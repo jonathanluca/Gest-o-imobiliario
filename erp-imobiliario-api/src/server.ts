@@ -3,10 +3,13 @@ import express from "express";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const app = express();
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter });
 
 const JWT_SECRET = process.env.JWT_SECRET || "erp-imobiliario-secret-dev";
 
@@ -29,9 +32,17 @@ function authMiddleware(req: any, res: any, next: any) {
 	}
 }
 
+function adminMiddleware(req: any, res: any, next: any) {
+	if (req.user?.role !== "admin") {
+		return res.status(403).json({ error: "Acesso restrito a administradores" });
+	}
+	next();
+}
+
 // ─── AUTH ────────────────────────────────────────────────────────────────────
 
-app.post("/api/auth/register", async (req, res) => {
+// Só admin pode criar usuários
+app.post("/api/auth/register", authMiddleware, adminMiddleware, async (req, res) => {
 	try {
 		const { full_name, email, password, role } = req.body;
 		if (!email || !password || !full_name) {
@@ -43,7 +54,7 @@ app.post("/api/auth/register", async (req, res) => {
 		}
 		const password_hash = await bcrypt.hash(password, 10);
 		const profile = await prisma.profile.create({
-			data: { full_name, email, password_hash, role: role || "corretor" },
+			data: { id: randomUUID(), full_name, email, password_hash, role: role || "corretor" },
 		});
 		res.status(201).json({ id: profile.id, full_name: profile.full_name, email: profile.email, role: profile.role });
 	} catch (error) {
@@ -206,14 +217,15 @@ app.delete("/api/imoveis/:id", authMiddleware, async (req, res) => {
 // ─── START ───────────────────────────────────────────────────────────────────
 
 async function main() {
-	// Garante que a coluna password_hash existe na tabela profiles (idempotente)
+	// Remove FK para auth.users (usamos JWT próprio, não Supabase Auth)
 	try {
+		await prisma.$executeRaw`
+			ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
+		`;
 		await prisma.$executeRaw`
 			ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password_hash TEXT;
 		`;
-	} catch {
-		// Silencia erro caso não tenha permissão ou já exista de outra forma
-	}
+	} catch {}
 
 	const PORT = process.env.PORT || 3000;
 	app.listen(PORT, () => {
