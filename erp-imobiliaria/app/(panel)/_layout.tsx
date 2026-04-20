@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, useRouter, usePathname, Redirect } from 'expo-router';
 import { View, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
-import { LayoutDashboard, Home, Users, DollarSign, MessageSquare, Calendar, LogOut } from 'lucide-react-native';
+import { LayoutDashboard, Home, Users, DollarSign, MessageSquare, Calendar, LogOut, UserCog } from 'lucide-react-native';
 import { theme } from '../../theme';
 import { getToken, getUser, clearAuth } from '../auth';
 import * as S from './layout.styles';
@@ -48,6 +48,9 @@ export default function PanelLayout() {
           <SidebarItem icon={<DollarSign size={20} />} label="Vendas" active={isActive('/vendas')} onPress={() => router.push('/vendas/vendas')} />
           <SidebarItem icon={<MessageSquare size={20} />} label="Leads" active={isActive('/leads')} onPress={() => router.push('/leads')} />
           <SidebarItem icon={<Calendar size={20} />} label="Calendário" active={isActive('/calendario')} onPress={() => router.push('/calendario')} />
+          {user?.role === 'admin' && (
+            <SidebarItem icon={<UserCog size={20} />} label="Funcionários" active={isActive('/funcionarios')} onPress={() => router.push('/funcionarios')} />
+          )}
         </S.SidebarContainer>
       )}
 
@@ -77,6 +80,7 @@ export default function PanelLayout() {
           <Tabs.Screen name="vendas" options={{ href: null }} />
           <Tabs.Screen name="leads" options={{ href: null }} />
           <Tabs.Screen name="calendario" options={{ href: null }} />
+          <Tabs.Screen name="funcionarios" options={{ href: null }} />
         </Tabs>
       </S.ContentArea>
     </S.MainContainer>
