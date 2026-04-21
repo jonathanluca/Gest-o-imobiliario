@@ -353,6 +353,60 @@ export const ImagePlaceholderText = styled.Text`
   color: ${theme.colors.textLight};
 `;
 
+/* ─── Stepper numérico ────────────────────────────────────────────────────── */
+
+export const StepperContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+  height: 44px;
+  border-width: 1.5px;
+  border-color: ${theme.colors.border};
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: white;
+`;
+
+export const StepperBtn = styled.TouchableOpacity`
+  width: 40px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+`;
+
+export const StepperBtnText = styled.Text`
+  font-size: 20px;
+  color: ${theme.colors.text};
+  line-height: 24px;
+`;
+
+export const StepperValue = styled.Text`
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: ${theme.colors.text};
+`;
+
+/* ─── CEP ─────────────────────────────────────────────────────────────────── */
+
+export const CepRow = styled.View`
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+`;
+
+export const CepInput = styled.View`
+  flex: 1;
+`;
+
+export const CepLoading = styled.View`
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+`;
+
 /* ─── Botões do modal ─────────────────────────────────────────────────────── */
 
 export const CancelButton = styled.TouchableOpacity`
