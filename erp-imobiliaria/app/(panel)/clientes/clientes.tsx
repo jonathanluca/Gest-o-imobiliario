@@ -90,8 +90,6 @@ export default function Clientes() {
 
   const searchTimer = useRef<any>(null);
 
-  const modalMaxHeight = Platform.OS === 'web' ? winHeight * 0.88 : undefined;
-  const formScrollHeight = Platform.OS === 'web' ? winHeight * 0.88 - 140 : undefined;
 
   useEffect(() => {
     fetchList('', 'todos');
@@ -393,8 +391,9 @@ export default function Clientes() {
       {/* Modal Criar / Editar */}
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
         <S.ModalOverlay>
-          <S.ModalContainer style={modalMaxHeight ? { maxHeight: modalMaxHeight } : undefined}>
-            {/* Header */}
+          <S.ModalBox keyboardShouldPersistTaps="handled">
+
+            {/* Header fixo */}
             <S.ModalHeader>
               <S.ModalTitle>{editingId ? 'Editar Cliente' : 'Novo Cliente'}</S.ModalTitle>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
@@ -403,11 +402,7 @@ export default function Clientes() {
             </S.ModalHeader>
 
             {/* Formulário */}
-            <S.FormScroll
-              keyboardShouldPersistTaps="handled"
-              style={formScrollHeight ? { maxHeight: formScrollHeight } : undefined}
-            >
-              <S.FormBody>
+            <S.FormBody>
 
                 {/* Nome */}
                 <S.InputGroup>
@@ -492,9 +487,8 @@ export default function Clientes() {
                 </S.InputGroup>
 
               </S.FormBody>
-            </S.FormScroll>
 
-            {/* Footer */}
+            {/* Footer fixo */}
             <S.ModalFooter>
               <S.CancelButton onPress={() => setModalVisible(false)}>
                 <Text style={{ fontSize: 14, color: theme.colors.text }}>Cancelar</Text>
@@ -508,7 +502,7 @@ export default function Clientes() {
               </S.SaveButton>
             </S.ModalFooter>
 
-          </S.ModalContainer>
+          </S.ModalBox>
         </S.ModalOverlay>
       </Modal>
     </S.Container>
