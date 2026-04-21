@@ -212,15 +212,14 @@ export const ModalOverlay = styled.View`
   background-color: rgba(0,0,0,0.45);
   justify-content: center;
   align-items: center;
-  padding: ${isWeb ? '32px' : '0px'};
+  padding: 24px;
 `;
 
-export const ModalContainer = styled.View`
+export const ModalBox = styled.ScrollView`
   background-color: white;
-  width: ${isWeb ? '560px' : '95%'};
   border-radius: 14px;
-  overflow: hidden;
-  flex-direction: column;
+  width: 100%;
+  max-width: ${isWeb ? '560px' : '100%'};
 `;
 
 export const ModalHeader = styled.View`
@@ -236,11 +235,6 @@ export const ModalTitle = styled.Text`
   font-size: 18px;
   font-weight: bold;
   color: ${theme.colors.text};
-`;
-
-export const FormScroll = styled.ScrollView`
-  flex: 1;
-  flex-shrink: 1;
 `;
 
 export const FormBody = styled.View`
