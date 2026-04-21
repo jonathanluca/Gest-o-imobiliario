@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, useWindowDimensions, Image,
-  Modal, TouchableOpacity, Alert, ActivityIndicator,
+  Modal, TouchableOpacity, Alert, ActivityIndicator, Platform,
 } from 'react-native';
 import { Plus, Search, ChevronDown, Eye, Pencil, Trash2, X } from 'lucide-react-native';
 
 import { theme } from '../../../theme';
+import { getToken } from '../../auth';
 import * as S from './imoveis.styles';
 
 const API_URL = 'http://localhost:3000';
@@ -70,7 +71,9 @@ export default function Imoveis() {
       const params = new URLSearchParams();
       if (searchText.trim()) params.set('search', searchText.trim());
       if (statusFilter !== 'todos') params.set('status', statusFilter);
-      const res = await fetch(`${API_URL}/api/imoveis?${params}`);
+      const res = await fetch(`${API_URL}/api/imoveis?${params}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
       if (!res.ok) throw new Error();
       setImoveis(await res.json());
     } catch {
@@ -140,7 +143,10 @@ export default function Imoveis() {
       const url = editingId ? `${API_URL}/api/imoveis/${editingId}` : `${API_URL}/api/imoveis`;
       const res = await fetch(url, {
         method: editingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error();
@@ -153,22 +159,28 @@ export default function Imoveis() {
     }
   }
 
-  function handleDelete(id: string) {
-    Alert.alert('Confirmar exclusão', 'Deseja excluir este imóvel permanentemente?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir', style: 'destructive',
-        onPress: async () => {
-          try {
-            const res = await fetch(`${API_URL}/api/imoveis/${id}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error();
-            fetchImoveis();
-          } catch {
-            Alert.alert('Erro', 'Não foi possível excluir o imóvel.');
-          }
-        },
-      },
-    ]);
+  async function handleDelete(id: string) {
+    const confirmed = Platform.OS === 'web'
+      ? (window as any).confirm('Deseja excluir este imóvel permanentemente?')
+      : await new Promise<boolean>((resolve) => {
+          Alert.alert('Confirmar exclusão', 'Deseja excluir este imóvel permanentemente?', [
+            { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Excluir', style: 'destructive', onPress: () => resolve(true) },
+          ]);
+        });
+
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/imoveis/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!res.ok) throw new Error();
+      fetchImoveis();
+    } catch {
+      Alert.alert('Erro', 'Não foi possível excluir o imóvel.');
+    }
   }
 
   function field(key: keyof typeof emptyForm) {
@@ -441,7 +453,7 @@ export default function Imoveis() {
                 {selectedProperty.broker?.full_name && (
                   <>
                     <S.Label>Corretor</S.Label>
-                    <Text style={{ marginBottom: 16 }}>{selectedProperty.profiles.full_name}</Text>
+                    <Text style={{ marginBottom: 16 }}>{selectedProperty.broker.full_name}</Text>
                   </>
                 )}
 
