@@ -379,6 +379,133 @@ app.delete("/api/clientes/:id", authMiddleware, async (req, res) => {
 	}
 });
 
+// ─── VENDAS ──────────────────────────────────────────────────────────────────
+
+app.get("/api/vendas", authMiddleware, async (req, res) => {
+	try {
+		const { search, status } = req.query;
+		const where: any = {};
+		if (status && status !== "todos") where.status = String(status);
+		if (search) {
+			where.OR = [
+				{ property: { title: { contains: String(search), mode: "insensitive" } } },
+				{ client: { name: { contains: String(search), mode: "insensitive" } } },
+				{ broker: { full_name: { contains: String(search), mode: "insensitive" } } },
+			];
+		}
+		const vendas = await prisma.sale.findMany({
+			where,
+			include: {
+				property: { select: { id: true, title: true, city: true, state: true } },
+				client: { select: { id: true, name: true } },
+				broker: { select: { id: true, full_name: true } },
+			},
+			orderBy: { created_at: "desc" },
+		});
+		res.json(vendas);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao buscar vendas" });
+	}
+});
+
+app.get("/api/vendas/stats", authMiddleware, async (req, res) => {
+	try {
+		const total = await prisma.sale.count();
+		const concluidas = await prisma.sale.count({ where: { status: "Concluída" } });
+		const valorTotal = await prisma.sale.aggregate({ _sum: { total_value: true } });
+		const comissaoTotal = await prisma.sale.aggregate({ _sum: { commission_value: true } });
+		res.json({
+			total,
+			concluidas,
+			valorTotal: valorTotal._sum.total_value || 0,
+			comissaoTotal: comissaoTotal._sum.commission_value || 0,
+		});
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao buscar estatísticas" });
+	}
+});
+
+app.get("/api/vendas/:id", authMiddleware, async (req, res) => {
+	try {
+		const venda = await prisma.sale.findUnique({
+			where: { id: req.params.id },
+			include: {
+				property: { select: { id: true, title: true, city: true, state: true } },
+				client: { select: { id: true, name: true } },
+				broker: { select: { id: true, full_name: true } },
+			},
+		});
+		if (!venda) return res.status(404).json({ error: "Venda não encontrada" });
+		res.json(venda);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao buscar venda" });
+	}
+});
+
+app.post("/api/vendas", authMiddleware, async (req, res) => {
+	try {
+		const { property_id, client_id, broker_id, total_value, commission_percentage, commission_value, status, sale_date } = req.body;
+		if (!total_value) return res.status(400).json({ error: "Valor total é obrigatório" });
+		const venda = await prisma.sale.create({
+			data: {
+				property_id: property_id || null,
+				client_id: client_id || null,
+				broker_id: broker_id || null,
+				total_value: parseFloat(total_value),
+				commission_percentage: commission_percentage ? parseFloat(commission_percentage) : null,
+				commission_value: commission_value ? parseFloat(commission_value) : null,
+				status: status || "Em Negociação",
+				sale_date: sale_date ? new Date(sale_date) : new Date(),
+			},
+			include: {
+				property: { select: { id: true, title: true, city: true, state: true } },
+				client: { select: { id: true, name: true } },
+				broker: { select: { id: true, full_name: true } },
+			},
+		});
+		res.status(201).json(venda);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao registrar venda" });
+	}
+});
+
+app.put("/api/vendas/:id", authMiddleware, async (req, res) => {
+	try {
+		const { property_id, client_id, broker_id, total_value, commission_percentage, commission_value, status, sale_date } = req.body;
+		if (!total_value) return res.status(400).json({ error: "Valor total é obrigatório" });
+		const venda = await prisma.sale.update({
+			where: { id: req.params.id },
+			data: {
+				property_id: property_id || null,
+				client_id: client_id || null,
+				broker_id: broker_id || null,
+				total_value: parseFloat(total_value),
+				commission_percentage: commission_percentage ? parseFloat(commission_percentage) : null,
+				commission_value: commission_value ? parseFloat(commission_value) : null,
+				status: status || "Em Negociação",
+				sale_date: sale_date ? new Date(sale_date) : undefined,
+			},
+			include: {
+				property: { select: { id: true, title: true, city: true, state: true } },
+				client: { select: { id: true, name: true } },
+				broker: { select: { id: true, full_name: true } },
+			},
+		});
+		res.json(venda);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao atualizar venda" });
+	}
+});
+
+app.delete("/api/vendas/:id", authMiddleware, async (req, res) => {
+	try {
+		await prisma.sale.delete({ where: { id: req.params.id } });
+		res.status(204).send();
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao excluir venda" });
+	}
+});
+
 // ─── START ───────────────────────────────────────────────────────────────────
 
 async function main() {
