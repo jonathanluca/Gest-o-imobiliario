@@ -21,6 +21,7 @@ model Profile {
   properties Property[]
   sales      Sale[]
   leads      Lead[]
+  visits     Visit[]    
 
   @@map("profiles")
   @@schema("public")
@@ -49,6 +50,7 @@ model Property {
 
   sales Sale[]
   leads Lead[]
+  visits Visit[]   
 
   @@map("properties")
   @@schema("public")
@@ -66,8 +68,32 @@ model Client {
 
   sales Sale[]
   leads Lead[]
+  visits Visit[]
 
   @@map("clients")
+  @@schema("public")
+}
+
+
+model Visit {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String?  // Ex: "Visita Apartamento Jardins"
+  date        DateTime @db.Timestamptz(6) // Data e hora da visita
+  status      String?  @default("Agendada") // "Agendada", "Concluída", "Cancelada"
+  description String?  // Observações sobre a visita
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relações
+  property_id String   @db.Uuid
+  property    Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+
+  client_id   String   @db.Uuid
+  client      Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
+  broker_id   String   @db.Uuid
+  broker      Profile  @relation(fields: [broker_id], references: [id], onDelete: Cascade)
+
+  @@map("visits")
   @@schema("public")
 }
 
