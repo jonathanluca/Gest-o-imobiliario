@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, useWindowDimensions, Image,
   Modal, TouchableOpacity, Alert, ActivityIndicator, Platform,
 } from 'react-native';
-import { Plus, Search, ChevronDown, Eye, Pencil, Trash2, X, ImageOff } from 'lucide-react-native';
+import { Plus, Search, ChevronDown, Eye, Pencil, Trash2, X, ImageOff, Minus } from 'lucide-react-native';
 
 import { theme } from '../../../theme';
 import { getToken } from '../../auth';
@@ -95,6 +95,8 @@ export default function Imoveis() {
   const [deletingId, setDeletingId]       = useState<string | null>(null);
   const [showTypePicker, setShowTypePicker]     = useState(false);
   const [showModalStatus, setShowModalStatus]   = useState(false);
+  const [loadingCep, setLoadingCep]       = useState(false);
+  const [imageError, setImageError]       = useState(false);
 
   const searchTimer = useRef<any>(null);
 
@@ -129,16 +131,52 @@ export default function Imoveis() {
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }));
   }
 
+  function stepField(key: 'bedrooms' | 'suites' | 'bathrooms' | 'parking_spots', delta: number) {
+    setForm(prev => {
+      const next = Math.max(0, (parseInt(prev[key]) || 0) + delta);
+      return { ...prev, [key]: String(next) };
+    });
+  }
+
+  function maskCep(value: string) {
+    const d = value.replace(/\D/g, '').slice(0, 8);
+    return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+  }
+
+  async function fetchCep(cep: string) {
+    const digits = cep.replace(/\D/g, '');
+    if (digits.length !== 8) return;
+    setLoadingCep(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data.erro) { Alert.alert('Atenção', 'CEP não encontrado.'); return; }
+      setForm(prev => ({
+        ...prev,
+        address: data.logradouro || prev.address,
+        city:    data.localidade || prev.city,
+        state:   data.uf || prev.state,
+      }));
+      setErrors(prev => ({ ...prev, address: undefined, city: undefined }));
+    } catch {
+      Alert.alert('Erro', 'Não foi possível buscar o CEP.');
+    } finally {
+      setLoadingCep(false);
+    }
+  }
+
   function openCreate() {
     setEditingId(null);
     setForm({ ...emptyForm });
     setErrors({});
+    setImageError(false);
     setShowTypePicker(false);
     setShowModalStatus(false);
     setModalFormVisible(true);
   }
 
   function openEdit(imovel: Imovel) {
+    setImageError(false);
     setEditingId(imovel.id);
     setForm({
       title:         imovel.title ?? '',
@@ -438,7 +476,33 @@ export default function Imoveis() {
                   {errors.address && <S.ErrorText>{errors.address}</S.ErrorText>}
                 </S.InputGroup>
 
-                {/* Cidade / Estado */}
+                {/* CEP com busca automática */}
+                <S.InputGroup>
+                  <S.Label>CEP</S.Label>
+                  <S.CepRow>
+                    <S.CepInput>
+                      <S.StyledInput
+                        placeholder="00000-000"
+                        placeholderTextColor={theme.colors.textLight}
+                        value={form.zip_code}
+                        onChangeText={v => {
+                          const masked = maskCep(v);
+                          setField('zip_code', masked);
+                          if (masked.replace(/\D/g, '').length === 8) fetchCep(masked);
+                        }}
+                        keyboardType="numeric"
+                        maxLength={9}
+                      />
+                    </S.CepInput>
+                    {loadingCep && (
+                      <S.CepLoading>
+                        <ActivityIndicator size="small" color={theme.colors.primary} />
+                      </S.CepLoading>
+                    )}
+                  </S.CepRow>
+                </S.InputGroup>
+
+                {/* Cidade / Estado preenchidos automaticamente pelo CEP */}
                 <S.Row>
                   <S.FlexField>
                     <S.Label>Cidade *</S.Label>
@@ -459,16 +523,6 @@ export default function Imoveis() {
                       value={form.state}
                       onChangeText={v => setField('state', v)}
                       maxLength={2}
-                    />
-                  </S.FlexField>
-                  <S.FlexField>
-                    <S.Label>CEP</S.Label>
-                    <S.StyledInput
-                      placeholder="00000-000"
-                      placeholderTextColor={theme.colors.textLight}
-                      value={form.zip_code}
-                      onChangeText={v => setField('zip_code', v)}
-                      keyboardType="numeric"
                     />
                   </S.FlexField>
                 </S.Row>
@@ -499,18 +553,20 @@ export default function Imoveis() {
                   </S.FlexField>
                 </S.Row>
 
-                {/* Quartos / Suítes / Banheiros / Vagas */}
+                {/* Quartos / Suítes / Banheiros / Vagas — Stepper */}
                 <S.Row>
                   {(['bedrooms', 'suites', 'bathrooms', 'parking_spots'] as const).map((key, i) => (
                     <S.FlexField key={key}>
                       <S.Label>{['Quartos', 'Suítes', 'Banheiros', 'Vagas'][i]}</S.Label>
-                      <S.StyledInput
-                        placeholder="0"
-                        placeholderTextColor={theme.colors.textLight}
-                        value={form[key]}
-                        onChangeText={v => setField(key, v)}
-                        keyboardType="numeric"
-                      />
+                      <S.StepperContainer>
+                        <S.StepperBtn onPress={() => stepField(key, -1)}>
+                          <Minus size={14} color={theme.colors.text} />
+                        </S.StepperBtn>
+                        <S.StepperValue>{parseInt(form[key]) || 0}</S.StepperValue>
+                        <S.StepperBtn onPress={() => stepField(key, 1)}>
+                          <Plus size={14} color={theme.colors.text} />
+                        </S.StepperBtn>
+                      </S.StepperContainer>
                     </S.FlexField>
                   ))}
                 </S.Row>
@@ -522,15 +578,21 @@ export default function Imoveis() {
                     placeholder="https://exemplo.com/foto.jpg"
                     placeholderTextColor={theme.colors.textLight}
                     value={form.image_url}
-                    onChangeText={v => setField('image_url', v)}
+                    onChangeText={v => { setField('image_url', v); setImageError(false); }}
                     autoCapitalize="none"
                   />
-                  {form.image_url.trim() ? (
-                    <S.ImagePreview source={{ uri: form.image_url }} resizeMode="cover" />
+                  {form.image_url.trim() && !imageError ? (
+                    <S.ImagePreview
+                      source={{ uri: form.image_url }}
+                      resizeMode="cover"
+                      onError={() => setImageError(true)}
+                    />
                   ) : (
                     <S.ImagePlaceholder>
                       <ImageOff size={24} color={theme.colors.textLight} />
-                      <S.ImagePlaceholderText>Pré-visualização da imagem</S.ImagePlaceholderText>
+                      <S.ImagePlaceholderText>
+                        {imageError ? 'URL inválida ou imagem inacessível' : 'Pré-visualização da imagem'}
+                      </S.ImagePlaceholderText>
                     </S.ImagePlaceholder>
                   )}
                 </S.InputGroup>
