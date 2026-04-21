@@ -293,6 +293,89 @@ app.delete("/api/imoveis/:id", authMiddleware, async (req, res) => {
 	}
 });
 
+// ─── CLIENTES ────────────────────────────────────────────────────────────────
+
+app.get("/api/clientes", authMiddleware, async (req, res) => {
+	try {
+		const { search, type } = req.query;
+		const where: any = {};
+		if (type && type !== "todos") where.type = String(type);
+		if (search) {
+			where.OR = [
+				{ name: { contains: String(search), mode: "insensitive" } },
+				{ email: { contains: String(search), mode: "insensitive" } },
+				{ document: { contains: String(search) } },
+				{ phone: { contains: String(search) } },
+			];
+		}
+		const clientes = await prisma.client.findMany({
+			where,
+			orderBy: { created_at: "desc" },
+		});
+		res.json(clientes);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao buscar clientes" });
+	}
+});
+
+app.get("/api/clientes/:id", authMiddleware, async (req, res) => {
+	try {
+		const cliente = await prisma.client.findUnique({ where: { id: req.params.id } });
+		if (!cliente) return res.status(404).json({ error: "Cliente não encontrado" });
+		res.json(cliente);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao buscar cliente" });
+	}
+});
+
+app.post("/api/clientes", authMiddleware, async (req, res) => {
+	try {
+		const { name, email, phone, document, type, notes } = req.body;
+		if (!name || !name.trim()) {
+			return res.status(400).json({ error: "Nome é obrigatório" });
+		}
+		if (document) {
+			const existing = await prisma.client.findFirst({ where: { document } });
+			if (existing) return res.status(409).json({ error: "CPF já cadastrado" });
+		}
+		const cliente = await prisma.client.create({
+			data: { name: name.trim(), email: email || null, phone: phone || null, document: document || null, type: type || null, notes: notes || null },
+		});
+		res.status(201).json(cliente);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao criar cliente" });
+	}
+});
+
+app.put("/api/clientes/:id", authMiddleware, async (req, res) => {
+	try {
+		const { name, email, phone, document, type, notes } = req.body;
+		if (!name || !name.trim()) {
+			return res.status(400).json({ error: "Nome é obrigatório" });
+		}
+		if (document) {
+			const existing = await prisma.client.findFirst({ where: { document, NOT: { id: req.params.id } } });
+			if (existing) return res.status(409).json({ error: "CPF já cadastrado para outro cliente" });
+		}
+		const cliente = await prisma.client.update({
+			where: { id: req.params.id },
+			data: { name: name.trim(), email: email || null, phone: phone || null, document: document || null, type: type || null, notes: notes || null },
+		});
+		res.json(cliente);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao atualizar cliente" });
+	}
+});
+
+app.delete("/api/clientes/:id", authMiddleware, async (req, res) => {
+	try {
+		await prisma.client.delete({ where: { id: req.params.id } });
+		res.status(204).send();
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao excluir cliente" });
+	}
+});
+
 // ─── START ───────────────────────────────────────────────────────────────────
 
 async function main() {
