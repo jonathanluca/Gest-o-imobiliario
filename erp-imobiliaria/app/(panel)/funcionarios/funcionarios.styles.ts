@@ -283,6 +283,24 @@ export const EmptyText = styled.Text`
   color: ${theme.colors.textLight};
 `;
 
+export const Toast = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background-color: #f0fdf4;
+  border-width: 1px;
+  border-color: #bbf7d0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+`;
+
+export const ToastText = styled.Text`
+  font-size: 14px;
+  color: #16a34a;
+  font-weight: 500;
+`;
+
 export const AccessDenied = styled.View`
   flex: 1;
   justify-content: center;
