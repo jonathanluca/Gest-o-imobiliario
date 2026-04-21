@@ -36,6 +36,34 @@ function formatCpf(cpf: string | null) {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
+function maskCpf(value: string) {
+  const d = value.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+}
+
+function isValidCpf(cpf: string): boolean {
+  const d = cpf.replace(/\D/g, '');
+  if (d.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(d)) return false; // todos iguais: 111.111.111-11
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(d[i]) * (10 - i);
+  let r = (sum * 10) % 11;
+  if (r === 10 || r === 11) r = 0;
+  if (r !== parseInt(d[9])) return false;
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(d[i]) * (11 - i);
+  r = (sum * 10) % 11;
+  if (r === 10 || r === 11) r = 0;
+  return r === parseInt(d[10]);
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 export default function Funcionarios() {
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
@@ -104,10 +132,35 @@ export default function Funcionarios() {
 
   function validate() {
     const e: Partial<typeof emptyForm> = {};
-    if (!form.full_name.trim()) e.full_name = 'Obrigatório';
-    if (!form.email.trim()) e.email = 'Obrigatório';
-    if (!editingId && !form.password.trim()) e.password = 'Obrigatório';
-    if (!form.cpf.trim()) e.cpf = 'Obrigatório';
+
+    if (!form.full_name.trim()) {
+      e.full_name = 'Nome é obrigatório';
+    } else if (form.full_name.trim().length < 3) {
+      e.full_name = 'Nome deve ter ao menos 3 caracteres';
+    } else if (!/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/.test(form.full_name.trim())) {
+      e.full_name = 'Nome deve conter apenas letras';
+    }
+
+    if (!form.email.trim()) {
+      e.email = 'E-mail é obrigatório';
+    } else if (!isValidEmail(form.email)) {
+      e.email = 'E-mail inválido';
+    }
+
+    if (!editingId) {
+      if (!form.password.trim()) {
+        e.password = 'Senha é obrigatória';
+      } else if (form.password.length < 6) {
+        e.password = 'Senha deve ter ao menos 6 caracteres';
+      }
+    }
+
+    if (!form.cpf.trim()) {
+      e.cpf = 'CPF é obrigatório';
+    } else if (!isValidCpf(form.cpf)) {
+      e.cpf = 'CPF inválido';
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -344,8 +397,9 @@ export default function Funcionarios() {
                   placeholder="000.000.000-00"
                   placeholderTextColor={theme.colors.textLight}
                   value={form.cpf}
-                  onChangeText={(v) => setForm({ ...form, cpf: v })}
+                  onChangeText={(v) => setForm({ ...form, cpf: maskCpf(v) })}
                   keyboardType="numeric"
+                  maxLength={14}
                   error={!!errors.cpf}
                 />
                 {errors.cpf && <S.ErrorText>{errors.cpf}</S.ErrorText>}
