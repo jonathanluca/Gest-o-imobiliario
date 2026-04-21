@@ -308,6 +308,7 @@ app.get("/api/clientes", authMiddleware, async (req, res) => {
 				{ phone: { contains: String(search) } },
 			];
 		}
+
 		const clientes = await prisma.client.findMany({
 			where,
 			orderBy: { created_at: "desc" },
@@ -331,6 +332,7 @@ app.get("/api/clientes/:id", authMiddleware, async (req, res) => {
 app.post("/api/clientes", authMiddleware, async (req, res) => {
 	try {
 		const { name, email, phone, document, type, notes } = req.body;
+
 		if (!name || !name.trim()) {
 			return res.status(400).json({ error: "Nome é obrigatório" });
 		}
@@ -350,6 +352,7 @@ app.post("/api/clientes", authMiddleware, async (req, res) => {
 app.put("/api/clientes/:id", authMiddleware, async (req, res) => {
 	try {
 		const { name, email, phone, document, type, notes } = req.body;
+
 		if (!name || !name.trim()) {
 			return res.status(400).json({ error: "Nome é obrigatório" });
 		}
