@@ -202,10 +202,8 @@ export const ModalOverlay = styled.View`
 export const ModalContainer = styled.View`
   background-color: white;
   width: ${isWeb ? '600px' : '95%'};
-  max-height: ${isWeb ? '88vh' : '92%'};
   border-radius: 14px;
   overflow: hidden;
-  display: flex;
   flex-direction: column;
 `;
 
@@ -226,6 +224,7 @@ export const ModalTitle = styled.Text`
 
 export const FormScroll = styled.ScrollView`
   flex: 1;
+  flex-shrink: 1;
 `;
 
 export const FormBody = styled.View`

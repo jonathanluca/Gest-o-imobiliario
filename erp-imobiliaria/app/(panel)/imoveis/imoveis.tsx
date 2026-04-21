@@ -75,8 +75,9 @@ function getCardImage(imovel: Imovel) {
 }
 
 export default function Imoveis() {
-  const { width } = useWindowDimensions();
+  const { width, height: winHeight } = useWindowDimensions();
   const cardWidth = width > 1100 ? '31.5%' : width > 768 ? '48%' : '100%';
+  const modalHeight = Platform.OS === 'web' ? winHeight * 0.85 : undefined;
 
   const [imoveis, setImoveis]             = useState<Imovel[]>([]);
   const [loading, setLoading]             = useState(true);
@@ -365,7 +366,7 @@ export default function Imoveis() {
       {/* ── MODAL FORM ────────────────────────────────────────────────────── */}
       <Modal visible={modalFormVisible} animationType="fade" transparent onRequestClose={() => setModalFormVisible(false)}>
         <S.ModalOverlay>
-          <S.ModalContainer>
+          <S.ModalContainer style={modalHeight ? { height: modalHeight } : undefined}>
             <S.ModalHeader>
               <S.ModalTitle>{editingId ? 'Editar Imóvel' : 'Novo Imóvel'}</S.ModalTitle>
               <TouchableOpacity onPress={() => setModalFormVisible(false)}>
@@ -569,7 +570,7 @@ export default function Imoveis() {
       {/* ── MODAL DETALHES ────────────────────────────────────────────────── */}
       <Modal visible={modalViewVisible} animationType="fade" transparent onRequestClose={() => setModalViewVisible(false)}>
         <S.ModalOverlay>
-          <S.ModalContainer>
+          <S.ModalContainer style={modalHeight ? { height: modalHeight } : undefined}>
             <S.ModalHeader>
               <S.ModalTitle>Detalhes do Imóvel</S.ModalTitle>
               <TouchableOpacity onPress={() => setModalViewVisible(false)}>
