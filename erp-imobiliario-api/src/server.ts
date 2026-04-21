@@ -28,7 +28,8 @@ function authMiddleware(req: any, res: any, next: any) {
 		req.user = jwt.verify(token, JWT_SECRET);
 		next();
 	} catch {
-		res.status(401).json({ error: "Token inválido ou expirado" });
+		// Adicione o "return" aqui:
+		return res.status(401).json({ error: "Token inválido ou expirado" });
 	}
 }
 
@@ -524,5 +525,101 @@ async function main() {
 		console.log(`🚀 Servidor ERP rodando na porta ${PORT}`);
 	});
 }
+
+app.get("/api/visitas", authMiddleware, async (req, res) => {
+	console.log("Buscando visitas...");
+	try {
+		const { mes, ano } = req.query;
+		
+		let where: any = {};
+		
+		// Verifica se enviou mês e ano e se são números válidos
+		if (mes && ano) {
+			const parsedAno = parseInt(String(ano));
+			const parsedMes = parseInt(String(mes));
+
+			if (!isNaN(parsedAno) && !isNaN(parsedMes)) {
+				const startDate = new Date(parsedAno, parsedMes - 1, 1);
+				const endDate = new Date(parsedAno, parsedMes, 0);
+				where.date = { gte: startDate, lte: endDate };
+			}
+		}
+
+		const visitas = await prisma.visit.findMany({
+			where,
+			include: {
+				property: { select: { title: true, address: true } },
+				client: { select: { name: true } },
+				broker: { select: { full_name: true } }
+			},
+			orderBy: { date: "asc" },
+		});
+		res.json(visitas);
+	} catch (error) {
+		console.error("Erro na rota GET /api/visitas:", error); // <-- Essencial para ver o erro real
+		res.status(500).json({ error: "Erro ao buscar visitas" });
+	}
+});
+
+// Criar nova visita
+app.post("/api/visitas", authMiddleware, async (req: any, res) => {
+	try {
+		const { title, date, description, property_id, client_id, status } = req.body;
+		
+		if (!date || !property_id || !client_id) {
+			return res.status(400).json({ error: "Data, Imóvel e Cliente são obrigatórios" });
+		}
+
+		const visita = await prisma.visit.create({
+			data: {
+				id: randomUUID(),
+				title,
+				date: new Date(date),
+				description,
+				status: status || "Agendada",
+				property_id,
+				client_id,
+				broker_id: req.user.id // O corretor logado é o responsável
+			},
+		});
+		res.status(201).json(visita);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao agendar visita" });
+	}
+});
+
+// Atualizar visita (Alterar data, status ou descrição)
+app.put("/api/visitas/:id", authMiddleware, async (req, res) => {
+	try {
+		const { title, date, description, status, property_id, client_id } = req.body;
+		
+		const visita = await prisma.visit.update({
+			where: { id: req.params.id },
+			data: {
+				title,
+				date: date ? new Date(date) : undefined,
+				description,
+				status,
+				property_id,
+				client_id
+			},
+		});
+		res.json(visita);
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao atualizar visita" });
+	}
+});
+
+// Deletar visita
+app.delete("/api/visitas/:id", authMiddleware, async (req, res) => {
+	console.log("deletando visita...");
+	try {
+		await prisma.visit.delete({ where: { id: req.params.id } });
+		res.status(204).send();
+	} catch (error) {
+		res.status(500).json({ error: "Erro ao excluir visita" });
+	}
+});
+
 
 main().catch(console.error);
