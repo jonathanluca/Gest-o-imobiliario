@@ -90,7 +90,8 @@ export default function Clientes() {
 
   const searchTimer = useRef<any>(null);
 
-  const modalHeight = Platform.OS === 'web' ? winHeight * 0.85 : undefined;
+  const modalMaxHeight = Platform.OS === 'web' ? winHeight * 0.88 : undefined;
+  const formScrollHeight = Platform.OS === 'web' ? winHeight * 0.88 - 140 : undefined;
 
   useEffect(() => {
     fetchList('', 'todos');
@@ -392,7 +393,7 @@ export default function Clientes() {
       {/* Modal Criar / Editar */}
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
         <S.ModalOverlay>
-          <S.ModalContainer style={modalHeight ? { maxHeight: modalHeight } : undefined}>
+          <S.ModalContainer style={modalMaxHeight ? { maxHeight: modalMaxHeight } : undefined}>
             {/* Header */}
             <S.ModalHeader>
               <S.ModalTitle>{editingId ? 'Editar Cliente' : 'Novo Cliente'}</S.ModalTitle>
@@ -402,7 +403,10 @@ export default function Clientes() {
             </S.ModalHeader>
 
             {/* Formulário */}
-            <S.FormScroll keyboardShouldPersistTaps="handled">
+            <S.FormScroll
+              keyboardShouldPersistTaps="handled"
+              style={formScrollHeight ? { maxHeight: formScrollHeight } : undefined}
+            >
               <S.FormBody>
 
                 {/* Nome */}
