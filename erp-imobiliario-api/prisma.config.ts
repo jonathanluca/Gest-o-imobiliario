@@ -1,10 +1,23 @@
-import "dotenv/config";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { defineConfig } from "@prisma/config";
+
+try {
+	const envPath = resolve(__dirname, ".env");
+	const envContent = readFileSync(envPath, "utf-8");
+	for (const line of envContent.split("\n")) {
+		const trimmed = line.trim();
+		if (!trimmed || trimmed.startsWith("#")) continue;
+		const [key, ...rest] = trimmed.split("=");
+		if (key && !process.env[key]) {
+			process.env[key] = rest.join("=").replace(/^"|"$/g, "");
+		}
+	}
+} catch {}
 
 export default defineConfig({
 	schema: "./prisma/schema.prisma",
 	datasource: {
-		// Aqui ele vai ler a URL do seu arquivo .env
-		url: process.env.DATABASE_URL,
+		url: process.env.DATABASE_URL!,
 	},
 });
