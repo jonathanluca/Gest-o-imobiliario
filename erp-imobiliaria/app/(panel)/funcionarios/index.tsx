@@ -397,14 +397,9 @@ export default function Funcionarios() {
                   placeholder="000.000.000-00"
                   placeholderTextColor={theme.colors.textLight}
                   value={form.cpf}
-<<<<<<< HEAD
-                  onChangeText={(v) => setForm({ ...form, cpf: v })}
-                  keyboardType="numeric"
-=======
                   onChangeText={(v) => setForm({ ...form, cpf: maskCpf(v) })}
                   keyboardType="numeric"
                   maxLength={14}
->>>>>>> main_homolog
                   error={!!errors.cpf}
                 />
                 {errors.cpf && <S.ErrorText>{errors.cpf}</S.ErrorText>}
