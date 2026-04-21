@@ -291,13 +291,29 @@ export default function Clientes() {
             <ChevronDown size={16} color={theme.colors.textLight} />
           </TouchableOpacity>
           {showTypePicker && (
-            <S.DropdownMenu>
-              {['todos', ...TIPOS].map((t) => (
-                <S.DropdownItem key={t} onPress={() => { setFilterType(t); setShowTypePicker(false); }}>
-                  <S.DropdownItemText>{t === 'todos' ? 'Todos os tipos' : t}</S.DropdownItemText>
-                </S.DropdownItem>
+            <View style={{
+              position: 'absolute', top: 48, left: 0, right: 0,
+              backgroundColor: 'white', borderWidth: 1,
+              borderColor: theme.colors.border, borderRadius: 8,
+              zIndex: 999, overflow: 'hidden',
+              shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, elevation: 10,
+            }}>
+              {['todos', ...TIPOS].map((t, i) => (
+                <TouchableOpacity
+                  key={t}
+                  onPress={() => { setFilterType(t); setShowTypePicker(false); }}
+                  style={{
+                    padding: 12, paddingHorizontal: 14,
+                    borderBottomWidth: i < TIPOS.length ? 1 : 0,
+                    borderBottomColor: theme.colors.border,
+                  }}
+                >
+                  <Text style={{ fontSize: 14, color: theme.colors.text }}>
+                    {t === 'todos' ? 'Todos os tipos' : t}
+                  </Text>
+                </TouchableOpacity>
               ))}
-            </S.DropdownMenu>
+            </View>
           )}
         </View>
       </S.FilterSection>
@@ -457,22 +473,37 @@ export default function Clientes() {
                 </S.Row>
 
                 {/* Tipo */}
-                <S.InputGroup>
+                <View style={{ zIndex: 10 }}>
                   <S.Label>Tipo de cliente</S.Label>
                   <S.SelectWrapper onPress={() => setShowFormTipo((v) => !v)}>
                     <S.SelectText>{form.type || 'Selecione...'}</S.SelectText>
                     <ChevronDown size={16} color={theme.colors.textLight} />
                   </S.SelectWrapper>
                   {showFormTipo && (
-                    <S.DropdownMenu>
-                      {TIPOS.map((t) => (
-                        <S.DropdownItem key={t} onPress={() => { setField('type', t); setShowFormTipo(false); }}>
-                          <S.DropdownItemText>{t}</S.DropdownItemText>
-                        </S.DropdownItem>
+                    <View style={{
+                      position: 'absolute', top: 68, left: 0, right: 0,
+                      backgroundColor: 'white', borderWidth: 1,
+                      borderColor: theme.colors.border, borderRadius: 8,
+                      zIndex: 999, overflow: 'hidden',
+                      shadowColor: '#000', shadowOpacity: 0.1,
+                      shadowRadius: 8, elevation: 10,
+                    }}>
+                      {TIPOS.map((t, i) => (
+                        <TouchableOpacity
+                          key={t}
+                          onPress={() => { setField('type', t); setShowFormTipo(false); }}
+                          style={{
+                            padding: 12, paddingHorizontal: 14,
+                            borderBottomWidth: i < TIPOS.length - 1 ? 1 : 0,
+                            borderBottomColor: theme.colors.border,
+                          }}
+                        >
+                          <Text style={{ fontSize: 14, color: theme.colors.text }}>{t}</Text>
+                        </TouchableOpacity>
                       ))}
-                    </S.DropdownMenu>
+                    </View>
                   )}
-                </S.InputGroup>
+                </View>
 
                 {/* Observações */}
                 <S.InputGroup>
