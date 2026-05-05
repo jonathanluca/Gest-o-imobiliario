@@ -4,7 +4,7 @@ import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 
 const app = express();
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 // Configurações essenciais
 app.use(cors()); // Libera o acesso para o seu React/React Native
@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
 // Rota 2: Listar Imóveis (Trazendo o nome do corretor junto)
 app.get("/imoveis", async (req, res) => {
 	try {
-		const imoveis = await prisma.properties.findMany();
+		const imoveis = await prisma.property.findMany();
 		res.json(imoveis);
 	} catch (error) {
 		console.error(error);
